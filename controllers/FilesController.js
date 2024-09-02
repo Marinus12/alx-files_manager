@@ -3,6 +3,8 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+import path from 'path';
+import mime from 'mime-types';
 
 /**
  * FilesController class to handle file operations
@@ -196,6 +198,57 @@ class FilesController {
       parentId: file.parentId,
       localPath: file.localPath,
     });
+  }
+
+  /**
+ * Handles the GET /files/:id/data to get the content of a file
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+  static async getFile(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user ? req.user._id : null;
+    const { size } = req.query;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(id) });
+
+    if (!file) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    if (!file.isPublic && (!userId || file.userId.toString() !== userId.toString())) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    if (file.type === 'folder') {
+      return res.status(400).json({ error: "A folder doesn't have content" });
+    }
+
+    let localPath = path.join(FOLDER_PATH, file.localPath);
+
+    if (size) {
+      const validSizes = ['500', '250', '100'];
+      if (!validSizes.includes(size)) {
+        return res.status(400).json({ error: 'Invalid size parameter' });
+      }
+      localPath = `${localPath}_${size}`;
+    }
+
+    await fs.promises.access(localPath);
+
+    const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+    const fileContent = await fs.promises.readFile(localPath);
+
+    res.setHeader('Content-Type', mimeType);
+    return res.status(200).send(fileContent);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 

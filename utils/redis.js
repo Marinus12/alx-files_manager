@@ -13,7 +13,7 @@ class RedisClient {
 
   async get(key) {
     const getAsync = promisify(this.client.get).bind(this.client);
-    return await getAsync(key);
+    return getAsync(key); // Removed redundant await
   }
 
   async set(key, value, duration) {

@@ -1,5 +1,4 @@
 import { ObjectId } from 'mongodb';
-import mime from 'mime-types';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import dbClient from '../utils/db';
@@ -15,7 +14,9 @@ class FilesController {
    * @param {Response} res - Express response object
    */
   static async postUpload(req, res) {
-    const { name, type, parentId, isPublic, data } = req.body;
+    const {
+      name, type, parentId, isPublic, data,
+    } = req.body;
     const token = req.headers['x-token'];
 
     // Validate token and user
@@ -92,7 +93,7 @@ class FilesController {
     // Validate token and user
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-    
+
     const file = await dbClient.db.collection('files').findOne({ _id: ObjectId(id), userId: ObjectId(userId) });
     if (!file) return res.status(404).json({ error: 'Not found' });
 
@@ -126,7 +127,7 @@ class FilesController {
       { $limit: 20 },
     ]).toArray();
 
-    const response = files.map(file => ({
+    const response = files.map((file) => ({
       id: file._id,
       userId: file.userId,
       name: file.name,

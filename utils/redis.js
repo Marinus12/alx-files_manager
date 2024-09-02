@@ -1,49 +1,30 @@
 import { createClient } from 'redis';
+import { promisify } from 'util';
 
 class RedisClient {
-    constructor() {
-        this.client = createClient();
+  constructor() {
+    this.client = createClient();
+    this.client.on('error', (err) => console.error(`Redis client error: ${err}`));
+  }
 
-        this.client.on('error', (error) => {
-            console.error('Redis client error:', error);
-        });
-    }
+  isAlive() {
+    return this.client.connected;
+  }
 
-    isAlive() {
-        return this.client.connected;
-    }
+  async get(key) {
+    const getAsync = promisify(this.client.get).bind(this.client);
+    return await getAsync(key);
+  }
 
-    async get(key) {
-        return new Promise((resolve, reject) => {
-            this.client.get(key, (err, reply) => {
-                if (err) return reject(err);
-                resolve(reply);
-            });
-        });
-    }
+  async set(key, value, duration) {
+    const setAsync = promisify(this.client.set).bind(this.client);
+    await setAsync(key, value, 'EX', duration);
+  }
 
-    async set(key, value, duration) {
-        console.log(`Setting key: ${key}, value: ${value}, duration: ${duration}`);
-        return new Promise((resolve, reject) => {
-            if (typeof duration !== 'number' || isNaN(duration) || duration <= 0) {
-                return reject(new Error('Invalid duration'));
-            }
-
-            this.client.set(key, value, 'EX', duration, (err) => {
-                if (err) return reject(err);
-                resolve();
-            });
-        });
-    }
-
-    async del(key) {
-        return new Promise((resolve, reject) => {
-            this.client.del(key, (err) => {
-                if (err) return reject(err);
-                resolve();
-            });
-        });
-    }
+  async del(key) {
+    const delAsync = promisify(this.client.del).bind(this.client);
+    await delAsync(key);
+  }
 }
 
 const redisClient = new RedisClient();

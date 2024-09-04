@@ -2,6 +2,7 @@ import sha1 from 'sha1';
 import { ObjectId } from 'mongodb';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+import { Router } from 'express';
 
 class UsersController {
   static async postNew(req, res) {
@@ -45,4 +46,4 @@ class UsersController {
   }
 }
 
-export default UsersController;
+export default UsersController.js;

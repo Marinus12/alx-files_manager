@@ -5,6 +5,7 @@ import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 import path from 'path';
 import mime from 'mime-types';
+import { Router } from 'express';
 
 /**
  * FilesController class to handle file operations
@@ -251,5 +252,4 @@ class FilesController {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
-
+}

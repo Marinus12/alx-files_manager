@@ -1,5 +1,6 @@
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
+import { Router } from 'express';
 
 class AppController {
   static getStatus(req, res) {
@@ -14,7 +15,6 @@ class AppController {
     const files = await dbClient.nbFiles();
 
     res.status(200).json({ users, files });
-  }
+ }
 }
-
-export default AppController;
+export default AppController.js;
